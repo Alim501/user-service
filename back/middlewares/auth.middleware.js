@@ -12,8 +12,8 @@ const authMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     const user = await userService.getUserById(decoded.id);
-    if (!user || user.status !== 'active') {
-      return res.status(401).json({ message: 'User not found or inactive' });
+    if (!user || user.status === 'blocked') {
+      return res.status(401).json({ message: 'User not found or blocked' });
     }
     next();
   } catch (err) {

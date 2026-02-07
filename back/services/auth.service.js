@@ -1,25 +1,14 @@
 const userService = require("./user.service");
 const mailService = require("./mail.service");
-const { pool } = require("../lib/db");
 const jwt = require("jsonwebtoken");
 
 const register = async (username, email, password) => {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const user = await userService.createUser(username, email, password, client);
-    console.log(`Auth User created (id: ${user.id}), sending verification email to ${user.email}`);
-    await mailService.sendVerificationEmail(user.email, user.verifyToken);
-    console.log(`Auth Verification email sent successfully for user ${user.id}`);
-    await client.query("COMMIT");
-    return { user };
-  } catch (error) {
-    await client.query("ROLLBACK");
-    console.error(`Auth Registration rolled back: ${error.message}`);
-    throw error;
-  } finally {
-    client.release();
-  }
+  const user = await userService.createUser(username, email, password);
+  console.log(`Auth User created (id: ${user.id}), sending verification email to ${user.email}`);
+  mailService.sendVerificationEmail(user.email, user.verifyToken).catch((error) => {
+    console.error(`Auth Failed to send verification email for user ${user.id}: ${error.message}`);
+  });
+  return { user };
 };
 
 const verify = async (token) => {
