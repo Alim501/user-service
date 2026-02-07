@@ -36,7 +36,12 @@ function UsersPage() {
 
       const data = await response.json();
       console.log(data);
-      setUsers(data);
+      const sorted = [...data].sort((a, b) => {
+        if (!a.lastLogin) return 1;
+        if (!b.lastLogin) return -1;
+        return new Date(b.lastLogin) - new Date(a.lastLogin);
+      });
+      setUsers(sorted);
     } catch (err) {
       setError('Failed to fetch users');
     } finally {

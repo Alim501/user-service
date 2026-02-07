@@ -4,7 +4,7 @@ const { pool } = require("../lib/db");
 
 const getUsers = async () => {
   const result = await pool.query(
-    'SELECT id, name AS username, email, status, "lastLogin" FROM "User"'
+    'SELECT id, name AS username, email, status, "lastLogin" FROM "User" ORDER BY "lastLogin" DESC NULLS LAST'
   );
   return result.rows;
 };
