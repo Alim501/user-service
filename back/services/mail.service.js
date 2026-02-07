@@ -1,6 +1,8 @@
 const nodemailer = require("nodemailer");
 
-console.log("Mail Initializing SMTP transporter");
+console.log("Mail Initializing SMTP transporter ");
+console.log(`Mail SMTP_USER: ${process.env.SMTP_USER ? '***' : 'not set'}`);
+console.log(`Mail SMTP_PASS: ${process.env.SMTP_PASS ? '***' : 'not set'}`);
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
