@@ -1,46 +1,29 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-console.log("Mail Initializing SMTP transporter ");
-console.log(`Mail SMTP_USER: ${process.env.SMTP_USER ? '***' : 'not set'}`);
-console.log(`Mail SMTP_PASS: ${process.env.SMTP_PASS ? '***' : 'not set'}`);
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  family: 4,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
-transporter.verify((error) => {
-  if (error) {
-    console.error("Mail SMTP connection failed:", error.message);
-  } else {
-    console.log("Mail SMTP connection established successfully");
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendVerificationEmail = async (email, token) => {
   console.log(`Mail Preparing verification email for ${email}`);
 
-  const mailOptions = {
-    from: process.env.SMTP_USER,
-    to: email,
-    subject: "Email Verification",
-    html: `
-      <h2>Verify your email</h2>
-      <p>Click the link below to verify your email address:</p>
-      <a href="${process.env.CLIENT_URL}/verify?token=${token}">Verify Email</a>
-    `,
-  };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`[Mail] Verification email sent to ${email}, messageId: ${info.messageId}`);
-    return info;
+    const { data, error } = await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: "Email Verification",
+      html: `
+        <h2>Verify your email</h2>
+        <p>Click the link below to verify your email address:</p>
+        <a href="${process.env.CLIENT_URL}/verify?token=${token}">Verify Email</a>
+      `,
+    });
+
+    if (error) {
+      console.error(`[Mail] Failed to send verification email to ${email}:`, error.message);
+      throw new Error(error.message);
+    }
+
+    console.log(`[Mail] Verification email sent to ${email}, id: ${data.id}`);
+    return data;
   } catch (error) {
     console.error(`[Mail] Failed to send verification email to ${email}:`, error.message);
     throw error;
