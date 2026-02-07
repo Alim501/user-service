@@ -45,7 +45,7 @@ const authenticateUser = async (email, password) => {
   return user;
 };
 
-const createUser = async (username, email, password) => {
+const createUser = async (username, email, password, client = pool) => {
   const existingUser = await getUserByEmail(email);
   const userEmail=email.toLowerCase();
   if (existingUser) {
@@ -53,7 +53,7 @@ const createUser = async (username, email, password) => {
   }
   const hashedPassword = await bcrypt.hash(password, 10);
   const verifyToken = crypto.randomUUID();
-  const result = await pool.query(
+  const result = await client.query(
     'INSERT INTO "User" (name, email, password, "verifyToken") VALUES ($1, $2, $3, $4) RETURNING id, name AS username, email, status, "verifyToken"',
     [username, userEmail, hashedPassword, verifyToken]
   );

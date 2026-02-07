@@ -3,11 +3,14 @@ const userService = require("../services/user.service");
 const register = async (req, res) => {
   const { username, email, password } = req.body;
   try {
+    console.log(`Auth Controller Registration request for email: ${email}`);
     const { user } = await service.register(username, email, password);
+    console.log(`Auth Controller Registration successful, verification email sent to ${email}`);
     res
       .status(201)
       .json({ message: "Verification email sent", id: user.id, email: user.email });
   } catch (error) {
+    console.error(`Auth Controller Registration failed for ${email}:`, error.message);
     res.status(400).json({ error: error.message });
   }
 };

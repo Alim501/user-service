@@ -1,5 +1,7 @@
 const nodemailer = require("nodemailer");
 
+console.log("Mail Initializing SMTP transporter");
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -10,7 +12,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+transporter.verify((error) => {
+  if (error) {
+    console.error("Mail SMTP connection failed:", error.message);
+  } else {
+    console.log("Mail SMTP connection established successfully");
+  }
+});
+
 const sendVerificationEmail = async (email, token) => {
+  console.log(`Mail Preparing verification email for ${email}`);
+
   const mailOptions = {
     from: process.env.SMTP_USER,
     to: email,
@@ -22,7 +34,14 @@ const sendVerificationEmail = async (email, token) => {
     `,
   };
 
-  return transporter.sendMail(mailOptions);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[Mail] Verification email sent to ${email}, messageId: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`[Mail] Failed to send verification email to ${email}:`, error.message);
+    throw error;
+  }
 };
 
 module.exports = {
