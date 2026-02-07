@@ -1,32 +1,11 @@
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  family: 4,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
-transporter.verify((error) => {
-  if (error) {
-    console.error("Mail SMTP connection failed:", error.message);
-  } else {
-    console.log("Mail SMTP connection established successfully");
-  }
-});
-
 const sendVerificationEmail = async (email, token) => {
   console.log(`Mail Preparing verification email for ${email}`);
 
-  const mailOptions = {
-    from: "alimzhan.mamurbekov@mail.ru",
-    to: email,
+  const body = {
+    sender: { name: "iLearning", email: "alimzhan.mamurbekov@mail.ru" },
+    to: [{ email }],
     subject: "Email Verification",
-    html: `
+    htmlContent: `
       <h2>Verify your email</h2>
       <p>Click the link below to verify your email address:</p>
       <a href="${process.env.CLIENT_URL}/verify?token=${token}">Verify Email</a>
@@ -34,9 +13,24 @@ const sendVerificationEmail = async (email, token) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`[Mail] Verification email sent to ${email}, messageId: ${info.messageId}`);
-    return info;
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || JSON.stringify(err));
+    }
+
+    const data = await response.json();
+    console.log(`[Mail] Verification email sent to ${email}, messageId: ${data.messageId}`);
+    return data;
   } catch (error) {
     console.error(`[Mail] Failed to send verification email to ${email}:`, error.message);
     throw error;
